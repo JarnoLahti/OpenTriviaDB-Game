@@ -8,7 +8,7 @@ async function handler(roomId, io) {
       return;
     }
 
-    const room = await getCurrentRoom(roomId);
+    const room = await RedisWrapper.getRoomById(roomId);
 
     if (!room) {
       clearInterval(this);
@@ -30,32 +30,33 @@ async function handler(roomId, io) {
 
     if (noClients) {
       room.noClientsRetry++;
-      await RedisWrapper.asyncSet(roomId, JSON.stringify(room));
+      await RedisWrapper.setRoom(room);
       return;
     }
 
     room.noClientsRetry = 0;
 
-    const currentQuestion = room.questions[room.currentQuestion];
+    const lastQuestion = room.currentQuestion;
 
-    const question = await handleQuestionChange(room);
+    const nextQuestion = await handleQuestionChange(room);
 
-    setTimeout(handleNextQuestion, 5000, io, roomId, question);
+    setTimeout(handleNextQuestion, 5000, io, roomId, nextQuestion);
 
-    io.in(roomId).emit('room_message', {
-      type: 'CORRECT_ANSWER',
-      value: {
-        timestamp: new Date().toISOString(),
-        questionId: currentQuestion.id,
-        selectionId: currentQuestion.correctAnswerId,
-      },
-    });
+    if (lastQuestion) {
+      io.in(roomId).emit('room_message', {
+        type: 'CORRECT_ANSWER',
+        value: {
+          timestamp: new Date().toISOString(),
+          questionId: lastQuestion.id,
+          selectionId: lastQuestion.correctAnswerId,
+        },
+      });
+    }
   });
 }
 
 async function handleQuestionChange(room) {
-  room.currentQuestion++;
-  if (room.currentQuestion == room.questionsAmount) {
+  if (room.currentQuestionIdx == room.questionsAmount) {
     //fetch new set of questions as old ones ran out
     const questionSetResult = await fetchQuestionSet(room.token, room.categoryId);
 
@@ -67,14 +68,18 @@ async function handleQuestionChange(room) {
 
     room.questionsAmount = room.questions.length;
 
-    room.currentQuestion = 0;
+    room.currentQuestionIdx = 0;
   }
 
-  const question = room.questions[room.currentQuestion];
+  room.currentQuestion = room.questions[room.currentQuestionIdx];
 
-  await RedisWrapper.asyncSet(room.id, JSON.stringify(room));
+  room.answerSubmissionsMap = {};
 
-  return question;
+  room.currentQuestionIdx++;
+
+  await RedisWrapper.setRoom(room);
+
+  return room.currentQuestion;
 }
 
 async function handleNextQuestion(io, roomId, question) {
@@ -87,17 +92,6 @@ async function handleNextQuestion(io, roomId, question) {
       selections: question.selections,
     },
   });
-}
-
-async function getCurrentRoom(roomId) {
-  const room = await RedisWrapper.asyncGet(roomId);
-
-  if (!room) {
-    console.log(`No room found with id: ${roomId}`);
-    return null;
-  }
-
-  return JSON.parse(room);
 }
 
 export default handler;

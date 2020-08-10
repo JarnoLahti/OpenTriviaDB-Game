@@ -12,7 +12,9 @@ async function createRoom(id, title, categoryId = null, removeIfEmpty = true) {
     title,
     removeIfEmpty,
     categoryId,
-    currentQuestion: 0,
+    currentQuestionIdx: 0,
+    currentQuestion: null,
+    answerSubmissionsMap: {},
     questionsAmount: questionSetResult.questionSet.length,
     noClientsRetry: 0,
   };

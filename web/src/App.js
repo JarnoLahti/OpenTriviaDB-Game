@@ -1,12 +1,12 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import io from "socket.io-client";
-import { Router, Link, useParams, useNavigate } from "@reach/router";
-import axios from "axios";
-import LobbyView from "./views/LobbyView";
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import io from 'socket.io-client';
+import { Router, Link, useParams, useNavigate } from '@reach/router';
+import axios from 'axios';
+import LobbyView from './views/LobbyView';
 
 const client = axios.create({
-  baseURL: "http://localhost:3000",
-  headers: { "Content-Type": "application/json" },
+  baseURL: 'http://localhost:3000',
+  headers: { 'Content-Type': 'application/json' },
 });
 
 function RoomView() {
@@ -16,21 +16,21 @@ function RoomView() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    socket.current = io("http://localhost:3000");
-    socket.current.emit("join_room", { payload: params.id });
-    socket.current.on("connected_users", (data) => {
+    socket.current = io('http://localhost:3000');
+    socket.current.emit('join_room', { payload: params.id });
+    socket.current.on('connected_users', (data) => {
       setUserList(data.payload);
     });
-    socket.current.on("user_left_room", (data) => {
+    socket.current.on('user_left_room', (data) => {
       setUserList((curr) => curr.filter((c) => c !== data.payload));
     });
-    socket.current.on("room_not_found", () => {
-      window.alert("ROOM NOT FOUND");
-      navigate("/");
+    socket.current.on('room_not_found', () => {
+      window.alert('ROOM NOT FOUND');
+      navigate('/');
     });
-    socket.current.on("room_full", () => {
-      window.alert("ROOM FULL");
-      navigate("/");
+    socket.current.on('room_full', () => {
+      window.alert('ROOM FULL');
+      navigate('/');
     });
     return () => socket.current.disconnect();
   }, [params.id]);
@@ -48,36 +48,27 @@ function RoomView() {
 }
 
 function CreateRoomView() {
-  const [room, setRoom] = useState({ name: "title", capacity: 0 });
+  const [room, setRoom] = useState({ name: 'title', capacity: 0 });
   const navigate = useNavigate();
 
   const onChange = (event) => {
     event.persist();
-    const value =
-      event.target.type === "number"
-        ? parseInt(event.target.value)
-        : event.target.value;
-    console.log(event.target.name);
+    const value = event.target.type === 'number' ? parseInt(event.target.value) : event.target.value;
+
     setRoom((curr) => ({ ...curr, [event.target.name]: value }));
   };
 
   const onSubmit = async () => {
-    const res = await client.post("/createroom", JSON.stringify(room));
+    const res = await client.post('/createroom', JSON.stringify(room));
     if (res.status === 200) {
-      navigate("/");
+      navigate('/');
     }
   };
 
   return (
     <React.Fragment>
       <input name="name" value={room.name} onChange={onChange} />
-      <input
-        name="capacity"
-        type="number"
-        value={room.capacity}
-        onChange={onChange}
-        step="1"
-      />
+      <input name="capacity" type="number" value={room.capacity} onChange={onChange} step="1" />
       <button type="button" onClick={onSubmit}>
         create
       </button>
@@ -91,7 +82,7 @@ function RoomSelectView() {
 
   useEffect(() => {
     async function fetchData() {
-      const result = await client.get("/rooms");
+      const result = await client.get('/rooms');
       setRoomList(result.data);
     }
     fetchData();
@@ -121,26 +112,19 @@ function RoomSelectView() {
 }
 
 function LoginView() {
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState('');
   const navigate = useNavigate();
 
   const login = async () => {
-    const result = await client.post(
-      "/login",
-      JSON.stringify({ username: username })
-    );
+    const result = await client.post('/login', JSON.stringify({ username: username }));
     console.log(result.data.token);
-    localStorage.setItem("token", result.data.token);
-    navigate("/");
+    localStorage.setItem('token', result.data.token);
+    navigate('/');
   };
 
   return (
     <React.Fragment>
-      <input
-        type="text"
-        value={username}
-        onChange={(event) => setUsername(event.target.value)}
-      />
+      <input type="text" value={username} onChange={(event) => setUsername(event.target.value)} />
       <button type="button" onClick={login}>
         login
       </button>
@@ -152,17 +136,14 @@ function App() {
   const [socket, setSocket] = useState(null);
   const navigate = useNavigate();
   useEffect(() => {
-    const s = io("http://localhost:3000");
-    s.on(
-      "connection",
-      s.emit("authenticate", { token: localStorage.getItem("token") })
-    );
-    s.on("authenticated", () => {
+    const s = io('http://localhost:3000');
+    s.on('connection', s.emit('authenticate', { token: localStorage.getItem('token') }));
+    s.on('authenticated', () => {
       setSocket(s);
     });
-    s.on("unauthorized", () => {
+    s.on('unauthorized', () => {
       setSocket(null);
-      navigate("/login");
+      navigate('/login');
     });
     return () => socket.disconnect();
   }, []);

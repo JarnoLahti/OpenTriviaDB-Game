@@ -3,6 +3,7 @@ import onJoinRoom from './onJoinRoom';
 import onChatMessage from './onChatMessage';
 import onLeave from './onLeave';
 import onDisconnecting from './onDisconnecting';
+import onSubmitAnswer from './onSubmitAnswer';
 
 function onAuthenticated(socket) {
   const { io } = this;
@@ -10,6 +11,7 @@ function onAuthenticated(socket) {
   socket.on('create_room', onCreateRoom.bind({ socket }));
   socket.on('chat_message', onChatMessage.bind({ io, socket }));
   socket.on('join_room', onJoinRoom.bind({ io, socket }));
+  socket.on('submit_answer', onSubmitAnswer.bind({ io, socket }));
   socket.on('leave', onLeave.bind({ socket }));
   socket.on('leave_room', onLeave.bind({ socket }));
   socket.on('disconnecting', onDisconnecting.bind({ socket }));

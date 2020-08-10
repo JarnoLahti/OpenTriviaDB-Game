@@ -39,7 +39,7 @@ httpServer.listen(PORT);
 (async function () {
   const room = await createRoom('lobby', 'LOBBY', null, false);
 
-  await RedisWrapper.asyncSet(room.id, JSON.stringify(room));
+  await RedisWrapper.setRoom(room);
 
   setInterval(roomHandler, 10000, 'lobby', io);
 })();
