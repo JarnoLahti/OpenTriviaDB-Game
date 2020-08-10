@@ -27,9 +27,11 @@ const roomReducer = (state, action) => {
     case 'MESSAGE':
       return { ...state, messages: [...state.messages, { type, timestamp, name: payload.name, content: payload.content }] };
     case 'QUESTION':
-      return { ...state, currentQuestion: { type, timestamp, content: payload.question, selections: payload.selections }, correctAnswer: null };
+      return { ...state, currentQuestion: { type, timestamp, id: payload.id, content: payload.question, selections: payload.selections }, correctAnswer: null };
     case 'CORRECT_ANSWER':
       return { ...state, correctAnswer: payload };
+    case 'ANSWER_SUBMIT':
+      return { ...state, messages: [...state.messages, { type, timestamp, name: payload.name, isCorrectAnswer: payload.isCorrectAnswer }] };
     case 'LEAVE':
       return { ...state, messages: [...state.messages, { type, timestamp, name: payload.name }], users: state.users.filter((u) => u.id !== payload.id) };
     case 'DISCONNECT':

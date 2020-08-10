@@ -5,7 +5,7 @@ async function handler(payload) {
 
   const { roomId } = payload;
 
-  const room = await RedisWrapper.asyncGet(roomId);
+  const room = await RedisWrapper.getRoomById(roomId);
 
   if (!room) {
     socket.emit('error_message', {

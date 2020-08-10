@@ -73,14 +73,8 @@ const SendButton = styled.button`
   height: 100%;
 `;
 
-const JoinMessage = styled.li`
-  color: green;
-  font-weight: bolder;
-  font-size: 12px;
-`;
-
-const LeaveMessage = styled.li`
-  color: rosybrown;
+const InfoMessage = styled.li`
+  color: ${(props) => props.color};
   font-weight: bolder;
   font-size: 12px;
 `;
@@ -113,7 +107,7 @@ const LobbyView = ({ socket }) => {
   };
 
   const handleAnswer = (event) => {
-    console.log(event.target.id);
+    socket.emit('submit_answer', { questionId: currentQuestion.id, answerId: event.target.id });
   };
 
   useEffect(() => {
@@ -145,11 +139,17 @@ const LobbyView = ({ socket }) => {
             {messages.map((m, idx) => {
               switch (m.type) {
                 case 'JOIN':
-                  return <JoinMessage key={idx}>{`[${m.timestamp}] : ${m.name} joined to room`}</JoinMessage>;
+                  return <InfoMessage color={'#66fc03'} key={idx}>{`[${m.timestamp}] : ${m.name} joined to room`}</InfoMessage>;
                 case 'LEAVE':
-                  return <LeaveMessage key={idx}>{`[${m.timestamp}] : ${m.name} left the room`}</LeaveMessage>;
+                  return <InfoMessage color={'#fc4e03'} key={idx}>{`[${m.timestamp}] : ${m.name} left the room`}</InfoMessage>;
                 case 'DISCONNECT':
-                  return <LeaveMessage key={idx}>{`[${m.timestamp}] : ${m.name} disconnected`}</LeaveMessage>;
+                  return <InfoMessage color={'#fc4e03'} key={idx}>{`[${m.timestamp}] : ${m.name} disconnected`}</InfoMessage>;
+                case 'ANSWER_SUBMIT':
+                  return (
+                    <InfoMessage color={m.isCorrectAnswer ? '#66fc03' : '#fc4e03'} key={idx}>{`[${m.timestamp}] : ${m.name} ${
+                      m.isCorrectAnswer ? 'answered correctly' : 'answered incorrectly'
+                    }`}</InfoMessage>
+                  );
                 default:
                   return <ChatMessage key={idx}>{`[${m.timestamp}] : ${m.name} > ${m.content}`}</ChatMessage>;
               }

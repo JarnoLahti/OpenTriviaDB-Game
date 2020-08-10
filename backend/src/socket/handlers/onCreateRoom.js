@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import { asyncSet } from '../../lib/redisWrapper';
+import RedisWrapper from '../../lib/redisWrapper';
 
 async function handler(payload) {
   const { socket } = this;
@@ -16,7 +16,7 @@ async function handler(payload) {
     category,
   };
 
-  await asyncSet(id, JSON.stringify(room));
+  await RedisWrapper.setRoom(room);
 
   socket.emit('room_created', { id });
 
