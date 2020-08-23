@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect } from 'react';
+import { useReducer, useEffect } from 'react';
 import { format } from 'date-fns';
 
 const useRoom = (socket, roomId) => {
@@ -6,13 +6,7 @@ const useRoom = (socket, roomId) => {
 
   useEffect(() => {
     socket.emit('join_room', { roomId: roomId });
-    socket.on('room_message', (payload) => {
-      return dispatch({ type: payload.type, payload: payload.value });
-    });
-
-    return () => {
-      socket.emit('leave_lobby');
-    };
+    socket.on('room_message', (payload) => dispatch({ type: payload.type, payload: payload.value }));
   }, [socket, roomId]);
 
   return state;
