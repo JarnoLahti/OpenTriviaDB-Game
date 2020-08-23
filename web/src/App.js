@@ -1,51 +1,8 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import io from 'socket.io-client';
-import { Router, Link, useParams, useNavigate } from '@reach/router';
-import axios from 'axios';
-import LobbyView from './views/LobbyView';
-
-const client = axios.create({
-  baseURL: 'http://localhost:3000',
-  headers: { 'Content-Type': 'application/json' },
-});
-
-function RoomView() {
-  const params = useParams();
-  const socket = useRef(null);
-  const [userList, setUserList] = useState([]);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    socket.current = io('http://localhost:3000');
-    socket.current.emit('join_room', { payload: params.id });
-    socket.current.on('connected_users', (data) => {
-      setUserList(data.payload);
-    });
-    socket.current.on('user_left_room', (data) => {
-      setUserList((curr) => curr.filter((c) => c !== data.payload));
-    });
-    socket.current.on('room_not_found', () => {
-      window.alert('ROOM NOT FOUND');
-      navigate('/');
-    });
-    socket.current.on('room_full', () => {
-      window.alert('ROOM FULL');
-      navigate('/');
-    });
-    return () => socket.current.disconnect();
-  }, [params.id]);
-
-  return (
-    <React.Fragment>
-      <Link to="/">to room selection...</Link>
-      <ul>
-        {userList.map((u) => (
-          <li key={u}>{u}</li>
-        ))}
-      </ul>
-    </React.Fragment>
-  );
-}
+import { Router, useNavigate } from '@reach/router';
+import RoomView from './views/RoomView';
+import CategorySelectionView from './views/CategorySelection';
 
 function CreateRoomView() {
   const [room, setRoom] = useState({ name: 'title', capacity: 0 });
@@ -59,10 +16,10 @@ function CreateRoomView() {
   };
 
   const onSubmit = async () => {
-    const res = await client.post('/createroom', JSON.stringify(room));
-    if (res.status === 200) {
-      navigate('/');
-    }
+    // const res = await client.post('/createroom', JSON.stringify(room));
+    // if (res.status === 200) {
+    //   navigate('/');
+    // }
   };
 
   return (
@@ -76,50 +33,15 @@ function CreateRoomView() {
   );
 }
 
-function RoomSelectView() {
-  const [roomList, setRoomList] = useState([]);
-  const [refreshCount, setRefreshCount] = useState(0);
-
-  useEffect(() => {
-    async function fetchData() {
-      const result = await client.get('/rooms');
-      setRoomList(result.data);
-    }
-    fetchData();
-  }, [refreshCount]);
-
-  const refresh = useCallback(() => {
-    setRefreshCount((curr) => curr + 1);
-  }, [setRefreshCount]);
-
-  return (
-    <React.Fragment>
-      <button type="button" onClick={refresh}>
-        refresh rooms...
-      </button>
-      <ul>
-        {roomList.map((r) => (
-          <li key={r.id}>
-            <Link to={`/join/${r.id}`}>{r.name}</Link>
-          </li>
-        ))}
-        <li>
-          <Link to="/createroom">create new room...</Link>
-        </li>
-      </ul>
-    </React.Fragment>
-  );
-}
-
 function LoginView() {
   const [username, setUsername] = useState('');
   const navigate = useNavigate();
 
   const login = async () => {
-    const result = await client.post('/login', JSON.stringify({ username: username }));
-    console.log(result.data.token);
-    localStorage.setItem('token', result.data.token);
-    navigate('/');
+    // const result = await client.post('/login', JSON.stringify({ username: username }));
+    // console.log(result.data.token);
+    // localStorage.setItem('token', result.data.token);
+    // navigate('/');
   };
 
   return (
@@ -154,9 +76,9 @@ function App() {
 
   return (
     <Router>
-      <LobbyView path="/" socket={socket} />
-      <CreateRoomView path="/createroom" />
-      <RoomView path="/join/:id" />
+      <CategorySelectionView path="/" />
+      <RoomView path="room/:id" socket={socket} />
+      <CreateRoomView path="createroom" />
     </Router>
   );
 }
@@ -164,8 +86,8 @@ function App() {
 function AppRouter() {
   return (
     <Router>
-      <App path="/" />
-      <LoginView path="/login" />
+      <App path="/*" />
+      <LoginView path="login" />
     </Router>
   );
 }
