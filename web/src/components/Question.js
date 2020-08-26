@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-const QuestionComponent = ({ question, selections, correctAnswer, handleAnswer }) => {
+const QuestionComponent = ({ question, correctAnswer, handleAnswer }) => {
   const isCorrect = (answerId) => {
     if (!correctAnswer) {
       return null;
@@ -11,10 +11,10 @@ const QuestionComponent = ({ question, selections, correctAnswer, handleAnswer }
 
   return (
     <ComponentContainer>
-      <QuestionContainer dangerouslySetInnerHTML={{ __html: `${question}` }} />
+      <QuestionContainer dangerouslySetInnerHTML={{ __html: `${question.content} (${question.difficulty}: ${question.points}p)` }} />
       <AnswerContainer>
-        {selections
-          ? selections.map((selection, idx) => {
+        {question.selections
+          ? question.selections.map((selection, idx) => {
               let row = '1/1';
               let column = '1/1';
 

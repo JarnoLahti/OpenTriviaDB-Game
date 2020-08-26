@@ -118,8 +118,8 @@ const RoomView = ({ socket }) => {
     <LobbyContainer>
       <UserListContainer>
         <Chat>
-          {users.map((m, idx) => (
-            <li key={idx}>{m.name}</li>
+          {users.sort((a, b) => b.points - a.points).map((m, idx) => (
+            <li key={idx}>{m.name} ({m.points}p)</li>
           ))}
         </Chat>
       </UserListContainer>
@@ -128,7 +128,7 @@ const RoomView = ({ socket }) => {
           {currentQuestion ? (
             <QuestionContainer>
               {currentQuestion ? (
-                <Question question={currentQuestion.content} selections={currentQuestion.selections} handleAnswer={handleAnswer} correctAnswer={correctAnswer} />
+                <Question question={currentQuestion} handleAnswer={handleAnswer} correctAnswer={correctAnswer} />
               ) : null}
             </QuestionContainer>
           ) : null}

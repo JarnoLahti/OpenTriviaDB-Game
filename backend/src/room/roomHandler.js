@@ -42,13 +42,20 @@ async function handler(roomId, io) {
 
     setTimeout(handleNextQuestion, 5000, io, roomId, nextQuestion);
 
+    let currentPoints = {};
+
+    clients.forEach(c => currentPoints[c] = io.sockets.sockets[c].points);
+
     if (lastQuestion) {
       io.in(roomId).emit('room_message', {
         type: 'CORRECT_ANSWER',
         value: {
-          timestamp: new Date().toISOString(),
-          questionId: lastQuestion.id,
-          selectionId: lastQuestion.correctAnswerId,
+          question: {
+            timestamp: new Date().toISOString(),
+            questionId: lastQuestion.id,
+            selectionId: lastQuestion.correctAnswerId,
+          },
+          currentPoints: currentPoints
         },
       });
     }
@@ -90,6 +97,8 @@ async function handleNextQuestion(io, roomId, question) {
       id: question.id,
       question: question.question,
       selections: question.selections,
+      difficulty: question.difficulty,
+      points: question.points
     },
   });
 }

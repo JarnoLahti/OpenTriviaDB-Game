@@ -11,6 +11,19 @@ const tokenClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+
+const questionDifficultyPoints = {
+  'easy': {
+    points: 100
+  },
+  'medium': {
+    points: 275
+  },
+  'hard': {
+    points: 500
+  }
+}
+
 export async function fetchToken() {
   const response = await tokenClient.get(null, {
     params: { command: 'request' },
@@ -51,6 +64,8 @@ export async function fetchQuestionSet(token, category = null) {
     index,
     question: q.question,
     id: uuid(),
+    difficulty: q.difficulty,
+    points: questionDifficultyPoints[q.difficulty].points,
     correctAnswer: q.correct_answer,
     correctAnswerId: correctAnswerId,
     selections: [

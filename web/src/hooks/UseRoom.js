@@ -21,9 +21,9 @@ const roomReducer = (state, action) => {
     case 'MESSAGE':
       return { ...state, messages: [...state.messages, { type, timestamp, name: payload.name, content: payload.content }] };
     case 'QUESTION':
-      return { ...state, currentQuestion: { type, timestamp, id: payload.id, content: payload.question, selections: payload.selections }, correctAnswer: null };
+      return { ...state, currentQuestion: { type, timestamp, id: payload.id, content: payload.question, selections: payload.selections, points: payload.points, difficulty: payload.difficulty }, correctAnswer: null };
     case 'CORRECT_ANSWER':
-      return { ...state, correctAnswer: payload };
+      return { ...state, correctAnswer: payload.question, users: state.users.map((p) => ({ id: p.id, name: p.name, points: payload.currentPoints[p.id] }))  };
     case 'ANSWER_SUBMIT':
       return { ...state, messages: [...state.messages, { type, timestamp, name: payload.name, isCorrectAnswer: payload.isCorrectAnswer }] };
     case 'LEAVE':
@@ -33,7 +33,7 @@ const roomReducer = (state, action) => {
     case 'JOIN':
       return { ...state, messages: [...state.messages, { type, timestamp, name: payload.name }], users: [...state.users, { id: payload.id, name: payload.name }] };
     case 'CONNECTED_USERS':
-      return { ...state, users: payload.map((p) => ({ id: p.id, name: p.name })) };
+      return { ...state, users: payload.map((p) => ({ id: p.id, name: p.name, points: p.points })) };
     default:
       return state;
   }

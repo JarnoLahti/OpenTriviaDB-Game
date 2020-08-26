@@ -29,6 +29,7 @@ async function handler(payload) {
         value: {
           id: socket.id,
           name: socket.name,
+          points: io.sockets.sockets[socket.id].points,
           timestamp: new Date().toISOString(),
         },
       });
@@ -37,12 +38,14 @@ async function handler(payload) {
         return {
           id: id,
           name: io.sockets.connected[id].name,
+          points: io.sockets.sockets[id].points
         };
       });
       socket.currentRoom = roomId;
+      socket.points = 0;
       io.to(roomId).emit('room_message', {
         type: 'CONNECTED_USERS',
-        value: [...currentUsers, { id: socket.id, name: socket.name }],
+        value: [...currentUsers, { id: socket.id, name: socket.name, points: io.sockets.sockets[socket.id].points}],
       });
     });
   });
