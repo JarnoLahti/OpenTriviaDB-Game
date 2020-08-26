@@ -35,7 +35,11 @@ async function handler(payload) {
 
   const isCorrectAnswer = room.currentQuestion.correctAnswerId == answerId;
 
-  socket.points = isCorrectAnswer ? socket.points + 1 : socket.points;
+  socket.points = isCorrectAnswer ? socket.points + room.currentQuestion.points : socket.points;
+
+  const infoMessage = isCorrectAnswer ? `${socket.id} scored ${room.currentQuestion.points}! New total ${socket.points}`:`${socket.id} answered incorrectly. Current points ${socket.points}`;
+
+  console.info(infoMessage);
 
   io.in(socket.currentRoom).emit('room_message', {
     type: 'ANSWER_SUBMIT',
