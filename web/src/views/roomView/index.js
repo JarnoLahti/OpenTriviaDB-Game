@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import useRoom from '../../hooks/UseRoom';
-import Question from '../../components/Question';
+import Question from './components/Question';
 import { useParams } from '@reach/router';
 import UserList from './components/UserList';
 
@@ -83,6 +83,7 @@ import UserList from './components/UserList';
 //   font-size: 12px;
 // `;
 
+
 const BaseLayout = styled.div`
   display: grid;
   width: 100vw;
@@ -90,18 +91,29 @@ const BaseLayout = styled.div`
   grid-template-columns: 500px 1fr;
 `;
 
-const UserListContainer = styled.div`
-  grid-column: 1/1;
+const FullSizeDiv = styled.div`
   width: 100%;
   height: 100%;
+`;
+
+const UserListContainer = styled(FullSizeDiv)`
+  grid-column: 1/1;
   background-color: ${(props) => props.theme.BACKGROUND};
 `;
 
-const ContentContainer = styled.div`
+const ContentContainer = styled(FullSizeDiv)`
   grid-column: 2/2;
+  display: grid;
+  grid-template-rows: 1fr 2fr;
   background-color: ${(props) => props.theme.FOREGROUND};
-  width: 100%;
-  height: 100%;
+`;
+
+const QuestionContainer = styled(FullSizeDiv)`
+  grid-row: 1/1;
+`;
+
+const ChatContainer = styled(FullSizeDiv)`
+  grid-row: 2/2;
 `;
 
 const RoomView = ({ socket }) => {
@@ -128,9 +140,9 @@ const RoomView = ({ socket }) => {
   //   }
   // };
 
-  // const handleAnswer = (event) => {
-  //   socket.emit('submit_answer', { questionId: currentQuestion.id, answerId: event.target.id });
-  // };
+  const handleAnswer = (event) => {
+    socket.emit('submit_answer', { questionId: currentQuestion.id, answerId: event.target.id });
+  };
 
   // useEffect(() => {
   //   chatBoxBottomRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -141,7 +153,14 @@ const RoomView = ({ socket }) => {
       <UserListContainer>
         <UserList users={users} />
       </UserListContainer>
-      <ContentContainer />
+      <ContentContainer>
+        <QuestionContainer>
+          <Question question={currentQuestion} handleAnswer={handleAnswer} correctAnswer={correctAnswer} />
+        </QuestionContainer>
+        <ChatContainer>
+
+        </ChatContainer>
+      </ContentContainer>
     </BaseLayout>
     // <LobbyContainer>
     //   <UserListContainer>

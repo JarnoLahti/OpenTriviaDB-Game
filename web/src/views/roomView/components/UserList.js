@@ -46,8 +46,11 @@ const UserList = styled.ul`
 
 const UserListItem = styled.li`
   margin-top: 10px;
-  width: 100%;
+  margin-left: 10px;
+  margin-right: 10px;
+  width: calc(100% - 20px);
   height: 75px;
+  background-color: ${props => props.theme.BACKGROUND_LIGHT};
 `;
 
 const UserContainer = styled.div`
@@ -88,7 +91,7 @@ const UserAvatar = styled.div`
 const UserAvatarImg = styled.img`
   border-radius: 50%;
   border: 2px solid;
-  border-color: ${(props) => props.theme.GREEN};
+  border-color: ${(props) => props.theme.YELLOW};
 `;
 
 const UserListComponent = ({ users }) => {
