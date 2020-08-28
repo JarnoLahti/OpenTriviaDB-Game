@@ -8,7 +8,7 @@ const ViewLayoutContainer = styled.div`
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-color: #424242;
+  background-color: ${props => props.theme.BACKGROUND};
 `;
 
 const SelectionCenterWrapper = styled.div`
