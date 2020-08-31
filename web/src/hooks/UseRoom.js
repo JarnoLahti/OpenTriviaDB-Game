@@ -19,7 +19,7 @@ const roomReducer = (state, action) => {
 
   switch (type) {
     case 'MESSAGE':
-      return { ...state, messages: [...state.messages, { type, timestamp, name: payload.name, content: payload.content }] };
+      return { ...state, messages: [...state.messages, { type, timestamp, name: payload.name, senderId: payload.senderId, content: payload.content }] };
     case 'QUESTION':
       return { ...state, currentQuestion: { type, timestamp, id: payload.id, content: payload.question, selections: payload.selections, points: payload.points, difficulty: payload.difficulty }, correctAnswer: null };
     case 'CORRECT_ANSWER':

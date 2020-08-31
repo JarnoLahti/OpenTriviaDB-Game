@@ -10,6 +10,7 @@ async function handler(payload) {
     type: 'MESSAGE',
     value: {
       name: socket.name,
+      senderId: socket.id,
       timestamp: new Date().toISOString(),
       content: payload,
     },

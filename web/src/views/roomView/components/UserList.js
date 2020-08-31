@@ -97,7 +97,7 @@ const UserAvatarImg = styled.img`
 const UserListComponent = ({ users }) => {
   return (
     <UserList>
-      {mockUsers.map((u) => {
+      {users.map((u) => {
         return (
           <UserListItem key={u.id}>
             <UserContainer>
