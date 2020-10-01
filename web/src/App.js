@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import { Router, useNavigate } from '@reach/router';
-import RoomView from './views/RoomView';
+import RoomView from './views/roomView';
 import CategorySelectionView from './views/CategorySelection';
 
 function CreateRoomView() {
