@@ -9,7 +9,6 @@ const asyncScan = promisify(client.scan).bind(client);
 const asyncMGet = promisify(client.mget).bind(client);
 
 
-
 async function setRoom(room) {
   await asyncSet(room.id, JSON.stringify(room));
 }
@@ -23,6 +22,36 @@ async function getRoomById(roomId) {
   }
 
   return JSON.parse(room);
+}
+
+async function updateRoomTransaction(roomId, updateFn) {
+  return new Promise((resolve, reject) => {
+    client.watch(roomId, (watchError) => {
+      if(watchError){
+        return reject({ data: null, error: watchError });
+      }
+
+      client.get(roomId, async (getError, result) => {
+        if(getError){
+          return reject({ data: null, error: getError });
+        }
+
+        let roomObj = JSON.parse(result);
+
+        await updateFn(roomObj);
+
+        client
+          .multi()
+          .set(roomId, JSON.stringify(roomObj))
+          .exec((execError, results) => {
+            if(execError){
+              reject({ data: null, error: execError })
+            }
+            resolve({ data: results, error: null })
+          });
+      });
+    });
+  });
 }
 
 async function getStaticRooms() {
@@ -47,8 +76,11 @@ async function getStaticRooms() {
   return rooms;
 }
 
+
+
 export default {
   getRoomById,
   setRoom,
+  updateRoomTransaction,
   getStaticRooms
 };

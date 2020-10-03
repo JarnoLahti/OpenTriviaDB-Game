@@ -10,34 +10,42 @@ async function handler(payload) {
     return;
   }
 
-  const room = await RedisWrapper.getRoomById(socket.currentRoom);
+  let isCorrectAnswer = false;
 
-  if (!room.currentQuestion) {
-    socket.emit('error_message', { error: 'QUESTION_NOT_INITIALIZED' });
-    return;
+  let currentQuestionPoints = 0;
+
+  try {
+    await RedisWrapper.updateRoomTransaction(socket.currentRoom, async (room) => {
+      if (!room.currentQuestion) {
+        socket.emit('error_message', { error: 'QUESTION_NOT_INITIALIZED' });
+        return;
+      }
+    
+      if (room.currentQuestion.id !== questionId) {
+        socket.emit('error_message', { error: 'WRONG_QUESTION_SUBMIT' });
+        return;
+      }
+
+      const answerSubmission = room.answerSubmissionsMap[socket.id];
+
+      if (answerSubmission && answerSubmission === questionId) {
+        socket.emit('error_message', { error: 'ANSWER_ALREADY_SUBMITTED' });
+        return;
+      }
+
+      room.answerSubmissionsMap[socket.id] = questionId;
+
+      isCorrectAnswer = room.currentQuestion.correctAnswerId == answerId;
+
+      currentQuestionPoints = room.currentQuestion.points
+    });
+  } catch (error) {
+    throw error.error;
   }
 
-  if (room.currentQuestion.id !== questionId) {
-    socket.emit('error_message', { error: 'WRONG_QUESTION_SUBMIT' });
-    return;
-  }
+  socket.points = isCorrectAnswer ? socket.points + currentQuestionPoints : socket.points;
 
-  const answerSubmission = room.answerSubmissionsMap[socket.id];
-
-  if (answerSubmission && answerSubmission === questionId) {
-    socket.emit('error_message', { error: 'ANSWER_ALREADY_SUBMITTED' });
-    return;
-  }
-
-  room.answerSubmissionsMap[socket.id] = questionId;
-
-  await RedisWrapper.setRoom(room);
-
-  const isCorrectAnswer = room.currentQuestion.correctAnswerId == answerId;
-
-  socket.points = isCorrectAnswer ? socket.points + room.currentQuestion.points : socket.points;
-
-  const infoMessage = isCorrectAnswer ? `${socket.id} scored ${room.currentQuestion.points}! New total ${socket.points}`:`${socket.id} answered incorrectly. Current points ${socket.points}`;
+  const infoMessage = isCorrectAnswer ? `${socket.id} scored ${currentQuestionPoints}! New total ${socket.points}`:`${socket.id} answered incorrectly. Current points ${socket.points}`;
 
   console.info(infoMessage);
 
