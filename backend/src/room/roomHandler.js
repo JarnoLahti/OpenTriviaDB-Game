@@ -8,45 +8,60 @@ async function handler(roomId, io) {
       return;
     }
 
-    const room = await RedisWrapper.getRoomById(roomId);
+    let lastQuestion = null;
 
-    if (!room) {
-      clearInterval(this);
+    let nextQuestion = null;
+
+    try {
+      await RedisWrapper.updateRoomTransaction(roomId, async (room) => {
+        if (!room) {
+          console.info(`Cleared interval for room ${room.title}`);
+          clearInterval(this);
+        }
+
+        const noClients = clients.length <= 0;
+
+        if (!room.removeIfEmpty && noClients) {
+          //no need to do anything
+          return false;
+        }
+
+        if (noClients && room.noClientsRetry == 5) {
+          console.info(`Cleared interval for room ${room.title}`);
+          clearInterval(this);
+          return false;
+        }
+
+        room.lastHandled = new Date().toUTCString();
+
+        if (noClients) {
+          room.noClientsRetry++;
+          return false;
+        }
+
+        room.noClientsRetry = 0;
+
+        lastQuestion = room.currentQuestion;
+
+        await handleQuestionChange(room);
+
+        nextQuestion = room.currentQuestion;
+
+        return true;
+      });
+    } catch (err) {
+      throw err.error;
     }
 
-    const noClients = clients.length <= 0;
-
-    if (!room.removeIfEmpty && noClients) {
-      //no need to do anything
-      return;
+    if (nextQuestion) {
+      setTimeout(handleNextQuestion, 5000, io, roomId, nextQuestion);
     }
-
-    if (noClients && room.noClientsRetry == 5) {
-      clearInterval(this);
-      return;
-    }
-
-    room.lastHandled = new Date().toUTCString();
-
-    if (noClients) {
-      room.noClientsRetry++;
-      await RedisWrapper.setRoom(room);
-      return;
-    }
-
-    room.noClientsRetry = 0;
-
-    const lastQuestion = room.currentQuestion;
-
-    const nextQuestion = await handleQuestionChange(room);
-
-    setTimeout(handleNextQuestion, 5000, io, roomId, nextQuestion);
-
-    let currentPoints = {};
-
-    clients.forEach(c => currentPoints[c] = io.sockets.sockets[c].points);
 
     if (lastQuestion) {
+      let currentPoints = {};
+
+      clients.forEach((c) => (currentPoints[c] = io.sockets.sockets[c].points));
+
       io.in(roomId).emit('room_message', {
         type: 'CORRECT_ANSWER',
         value: {
@@ -55,7 +70,7 @@ async function handler(roomId, io) {
             questionId: lastQuestion.id,
             selectionId: lastQuestion.correctAnswerId,
           },
-          currentPoints: currentPoints
+          currentPoints: currentPoints,
         },
       });
     }
@@ -83,13 +98,9 @@ async function handleQuestionChange(room) {
   room.answerSubmissionsMap = {};
 
   room.currentQuestionIdx++;
-
-  await RedisWrapper.setRoom(room);
-
-  return room.currentQuestion;
 }
 
-async function handleNextQuestion(io, roomId, question) {
+function handleNextQuestion(io, roomId, question) {
   io.in(roomId).emit('room_message', {
     type: 'QUESTION',
     value: {
@@ -98,7 +109,7 @@ async function handleNextQuestion(io, roomId, question) {
       question: question.question,
       selections: question.selections,
       difficulty: question.difficulty,
-      points: question.points
+      points: question.points,
     },
   });
 }

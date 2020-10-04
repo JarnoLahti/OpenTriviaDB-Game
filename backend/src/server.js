@@ -62,7 +62,6 @@ httpServer.listen(PORT);
   await RedisWrapper.setRoom(science);
   await RedisWrapper.setRoom(geography);
 
-
   setInterval(roomHandler, 10000, random.id, io);
   setInterval(roomHandler, 10000, sport.id, io);
   setInterval(roomHandler, 10000, movies.id, io);
