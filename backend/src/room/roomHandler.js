@@ -91,8 +91,6 @@ async function handleQuestionChange(room) {
     room.questionsAmount = room.questions.length;
 
     room.currentQuestionIdx = 0;
-
-    console.log("FETCH'D NEW QUESTIONS");
   }
 
   room.currentQuestion = room.questions[room.currentQuestionIdx];

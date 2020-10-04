@@ -59,7 +59,6 @@ async function updateRoomTransaction(roomId, updateFn) {
           if(execError){
             reject({ data: null, error: execError })
           }
-          console.log("TRANSACTION COMPLETE");
           resolve({ data: results, error: null })
         });
       });
