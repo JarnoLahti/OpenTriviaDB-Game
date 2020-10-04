@@ -12,31 +12,31 @@ async function handler(roomId, io) {
 
     let nextQuestion = null;
 
-    let noClients = true;
-
-    try{
-      await RedisWrapper.updateRoomTransaction(roomId, async (room)  => {
+    try {
+      await RedisWrapper.updateRoomTransaction(roomId, async (room) => {
         if (!room) {
+          console.info(`Cleared interval for room ${room.title}`);
           clearInterval(this);
         }
-    
-        noClients = clients.length <= 0;
-    
+
+        const noClients = clients.length <= 0;
+
         if (!room.removeIfEmpty && noClients) {
           //no need to do anything
-          return;
+          return false;
         }
-    
+
         if (noClients && room.noClientsRetry == 5) {
+          console.info(`Cleared interval for room ${room.title}`);
           clearInterval(this);
-          return;
+          return false;
         }
-    
+
         room.lastHandled = new Date().toUTCString();
-    
+
         if (noClients) {
           room.noClientsRetry++;
-          return;
+          return false;
         }
 
         room.noClientsRetry = 0;
@@ -46,20 +46,21 @@ async function handler(roomId, io) {
         await handleQuestionChange(room);
 
         nextQuestion = room.currentQuestion;
-      });
 
-    }catch(err){
+        return true;
+      });
+    } catch (err) {
       throw err.error;
     }
 
-    if(nextQuestion){
+    if (nextQuestion) {
       setTimeout(handleNextQuestion, 5000, io, roomId, nextQuestion);
     }
 
     if (lastQuestion) {
       let currentPoints = {};
 
-      clients.forEach(c => currentPoints[c] = io.sockets.sockets[c].points);
+      clients.forEach((c) => (currentPoints[c] = io.sockets.sockets[c].points));
 
       io.in(roomId).emit('room_message', {
         type: 'CORRECT_ANSWER',
@@ -69,7 +70,7 @@ async function handler(roomId, io) {
             questionId: lastQuestion.id,
             selectionId: lastQuestion.correctAnswerId,
           },
-          currentPoints: currentPoints
+          currentPoints: currentPoints,
         },
       });
     }
@@ -90,6 +91,8 @@ async function handleQuestionChange(room) {
     room.questionsAmount = room.questions.length;
 
     room.currentQuestionIdx = 0;
+
+    console.log("FETCH'D NEW QUESTIONS");
   }
 
   room.currentQuestion = room.questions[room.currentQuestionIdx];
@@ -108,7 +111,7 @@ function handleNextQuestion(io, roomId, question) {
       question: question.question,
       selections: question.selections,
       difficulty: question.difficulty,
-      points: question.points
+      points: question.points,
     },
   });
 }

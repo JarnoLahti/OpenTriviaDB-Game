@@ -1,7 +1,7 @@
 import RedisWrapper from '../../lib/redisWrapper';
 
 async function handler(payload) {
-  const { socket, io } = this;
+  const { socket } = this;
 
   const { questionId, answerId } = payload;
 
@@ -14,23 +14,25 @@ async function handler(payload) {
 
   let currentQuestionPoints = 0;
 
+  let error = null;
+
   try {
     await RedisWrapper.updateRoomTransaction(socket.currentRoom, async (room) => {
       if (!room.currentQuestion) {
-        socket.emit('error_message', { error: 'QUESTION_NOT_INITIALIZED' });
-        return;
+        error = 'QUESTION_NOT_INITIALIZED';
+        return false;
       }
     
       if (room.currentQuestion.id !== questionId) {
-        socket.emit('error_message', { error: 'WRONG_QUESTION_SUBMIT' });
-        return;
+        error = 'WRONG_QUESTION_SUBMIT';
+        return false;
       }
 
       const answerSubmission = room.answerSubmissionsMap[socket.id];
 
       if (answerSubmission && answerSubmission === questionId) {
-        socket.emit('error_message', { error: 'ANSWER_ALREADY_SUBMITTED' });
-        return;
+        error = 'ANSWER_ALREADY_SUBMITTED';
+        return false;
       }
 
       room.answerSubmissionsMap[socket.id] = questionId;
@@ -38,9 +40,16 @@ async function handler(payload) {
       isCorrectAnswer = room.currentQuestion.correctAnswerId == answerId;
 
       currentQuestionPoints = room.currentQuestion.points
+
+      return true;
     });
   } catch (error) {
     throw error.error;
+  }
+
+  if(error){
+    socket.emit('error_message', { error });
+    return;
   }
 
   socket.points = isCorrectAnswer ? socket.points + currentQuestionPoints : socket.points;
@@ -48,16 +57,6 @@ async function handler(payload) {
   const infoMessage = isCorrectAnswer ? `${socket.id} scored ${currentQuestionPoints}! New total ${socket.points}`:`${socket.id} answered incorrectly. Current points ${socket.points}`;
 
   console.info(infoMessage);
-
-  io.in(socket.currentRoom).emit('room_message', {
-    type: 'ANSWER_SUBMIT',
-    value: {
-      id: socket.id,
-      timestamp: new Date().toISOString(),
-      name: socket.name,
-      isCorrectAnswer,
-    },
-  });
 }
 
 export default handler;

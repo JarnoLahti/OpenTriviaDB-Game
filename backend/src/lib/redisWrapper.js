@@ -37,18 +37,31 @@ async function updateRoomTransaction(roomId, updateFn) {
         }
 
         let roomObj = JSON.parse(result);
+        
+        let shouldUpdate = false;
+        try {
+          shouldUpdate = await updateFn(roomObj);
+        } catch (error) {
+          console.error(`TRANSACTION UPDATE FN FAILED: ${error} DISCARDING`);
+          client.unwatch();
+          return;
+        }
 
-        await updateFn(roomObj);
+        if(!shouldUpdate){
+          client.unwatch();
+          return;
+        }
 
         client
-          .multi()
-          .set(roomId, JSON.stringify(roomObj))
-          .exec((execError, results) => {
-            if(execError){
-              reject({ data: null, error: execError })
-            }
-            resolve({ data: results, error: null })
-          });
+        .multi()
+        .set(roomId, JSON.stringify(roomObj))
+        .exec((execError, results) => {
+          if(execError){
+            reject({ data: null, error: execError })
+          }
+          console.log("TRANSACTION COMPLETE");
+          resolve({ data: results, error: null })
+        });
       });
     });
   });
